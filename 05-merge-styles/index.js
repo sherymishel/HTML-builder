@@ -1,29 +1,29 @@
-let fs = require('fs');
+const fs = require('fs');
+const path = require('path');
 
-//let wS = fs.createWriteStream(`${__dirname}/project-dist/bundle.css`, { flags: 'a' });
+const write = fs.createWriteStream('05-merge-styles/project-dist/bundle.css');
 
-fs.open(`${__dirname}/project-dist/bundle.css`, 'a', (err) => {
-    if(err) throw err;
-    console.log('File created');
-});
+fs.readdir('05-merge-styles/styles',{withFileTypes : true},async (err,files) => {
+  for(let i = 0; i < files.length; i++) {
+    if(path.extname(files[i].name) == '.css') {
+      let data = await makeResult(files[i].name);
+      data.forEach(element => {
+        write.write(element);
+      });
+    }
+  }
+})
 
-console.log(__dirname);
-let way = __dirname+'\\'+'styles';
-fs.readdir(way, (err, data) => {
-    console.log(way);
-    data.forEach(file => {
-        if (file.split('.')[1] == 'css') {
-            console.log(file);
-            fs.copyFile(__dirname+'\\'+'styles\\'+file, `${__dirname}/project-dist/bundle.css`, (err) => {
-              if (err) throw err;
-              console.log('was copied to destination');
-          });
-        // fs.appendFile(`${__dirname}/project-dist/bundle.css`, 'hi',function(err){
-        //     if(err) throw err;
-        //     console.log('IS WRITTEN');
-        //     });
-        }
-    });
+function makeResult(url) {
+  return new Promise((resolve,reject) => {
+    const result = [];
+    fs.createReadStream('05-merge-styles/styles/' + url)
+      .on("data", chunk => {
+        result.push(chunk.toString());
+      })
+      .on("end",()=>{
+        resolve(result);
+      })
+      .on("error", reject);
   });
-
-
+}
